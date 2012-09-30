@@ -8,7 +8,7 @@ art_src=$1
 input=$2
 duration=$3
 song=$4
-art="${song}_art.mpg"
+art="temp_art.mpg"
 vid="${song}.mpg"
 ffmpeg -loop_input -t $duration -i "$art_src" "$art"
 ffmpeg -i "$input" -i "$art" -vcodec copy "$vid"
