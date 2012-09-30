@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+import sys
+import subprocess
+import os
+import optparse
+import inspect
+from pprint import pprint
+
+def print_path():
+    print "PYTHONPATH: %s" % os.getenv('PYTHONPATH', None)
+    pprint(sys.path)
+
+def main():
+    """prints __file__ for module w/ various options"""
+    p = optparse.OptionParser(
+        usage=('%prog module[.path]' + "\n\n" + inspect.getdoc(main)))
+    p.add_option('-e', '--edit', action='store_true', 
+        help='Edit the py file if there is one (will open the directory if it\'s a module)')
+    p.add_option('--verbose', action='store_true', 
+        help='show path info when module is not found')
+    p.add_option('-p','--path', action='store_true', 
+        help='just print path info (for the inquisitive types)')
+    p.add_option('--debug', action='store_true', 
+        help='show the traceback when there are import errors')
+    p.add_option('-V','--version', action='store_true',
+        help="also look for and print module.__version__ or module.VERSION")
+    
+    (options, args) = p.parse_args()
+    
+    if options.path:
+        print_path()
+    else:        
+        try:
+            namepath, = args
+        except ValueError:
+            p.error('incorrect args')
+        
+        div = namepath.rfind('.')
+        if div != -1:
+            name = namepath[0:div]
+            fromlist = [namepath[div+1:]]
+        else:
+            name = namepath
+            fromlist = []
+        try:
+            mod = __import__(name, globals(), locals(), fromlist)
+        except ImportError:
+            if options.debug:
+                raise
+            print >>sys.stderr, "module '%s' not found" % namepath
+            if options.verbose:
+                print_path()
+        else:
+            if len(fromlist):
+                mod = getattr(mod, fromlist[0])
+            print mod.__file__
+            if options.version:
+                if hasattr(mod, '__version__'):
+                    print mod.__version__
+                elif hasattr(mod, 'VERSION'):
+                    # django
+                    print mod.VERSION
+                else:
+                    print >>sys.stderr, "no version info available"
+            if options.edit:
+                f = mod.__file__
+                if f.endswith('pyc'):
+                    f = f[0:-1]
+                if f.endswith('__init__.py'):
+                    f = f[0:-len('__init__.py')]
+                # can't use EDITOR here because that will launch 
+                # a blocking editor for commit messages, etc
+                cmd = '%s "%s"' % ('mate', f)
+                if options.verbose:
+                    print "will edit with: %s" % cmd
+                subprocess.call(cmd, shell=True, env={'PATH':os.environ['PATH']})
+            
+
+if __name__ == '__main__':
+    main()

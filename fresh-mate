@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+matepath="/Library/Application Support/TextMate"
+cd "$matepath"
+svn up
+mate $@

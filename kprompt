@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# sets the prompt title for tabbed terminals (like iterm)
+export PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"'

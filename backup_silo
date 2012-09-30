@@ -1,0 +1,46 @@
+#!/usr/bin/env python
+
+import inspect
+import optparse
+from os import path
+import logging
+from testtools import io
+
+log = logging.getLogger('backup_silo')
+log_strm = logging.StreamHandler()
+log_strm.setFormatter(loggin.Formatter(fmt = '%(asctime)s %(message)s'))
+log.addHandler(log_strm)
+
+root = '/Users/kumar'
+dirs = [
+    (root, 'Documents'),
+    (root, 'Pictures'),
+    (root, 'Projects'),
+    (root, 'words'),
+]
+
+def main():
+    """backs up all dirs in the conf to dest_dir."""
+    parser = optparse.OptionParser(usage = '%prog dest_dir' + "\n\n" + inspect.getdoc(main))
+    parser.add_option('--conf', help="bypass internal conf with this.  example: /home/joe:music;/home/joe:docs")
+    (options, args) = parser.parse_args()
+    try:
+        dest_root, = args
+    except ValueError:
+        parser.error('incorrect args')
+    
+    if options.conf:
+        info.log("overiding conf with: %s" % options.conf)
+        dirs = [ p.split(':') for p in options.conf.split(';') ]
+    
+    for root,bpath in dirs:
+        abslocal = path.join(root, bpath)
+        absremote = path.join(dest_root, bpath)
+        log.info("%s -> %s" % (abslocal, absremote))
+        assert path.exists(abslocal)
+        
+        if path.isdir(abslocal):
+            io.mkdirall(absremote)
+
+if __name__ == '__main__':
+    main()

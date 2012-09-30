@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# effort here somehow got duped in mac2unix.py
+
+
+function usage()
+{
+    echo "usage: `basename $0` file"
+    echo "       `basename $0` -b file"
+    echo ""
+    echo "The first form converts mac line-breaks to unix line-breaks in file."
+    echo "The second form saves a backup to file~ then converts"
+    exit 0
+}
+
+if [ $# -eq 0 ]; then
+    usage
+fi
+
+backup=0
+file=$1
+
+for arg in $@; do  
+    if [ "$arg" = '-h' -o "$arg" = '--help' ]; then
+        usage
+    fi
+    if [ "$arg" = '-b' ]; then
+        backup=1
+        if [ $# -ne 2 ]; then
+            usage
+        fi
+        file=$2
+    fi
+done
+
+tmpfile="$file~"
+cp $file $tmpfile
+if [ $backup -eq 1 ]; then
+    echo "backing up to $tmpfile ..."
+fi
+echo "$file: converting line breaks ..."
+tr '\015' '\012' < $tmpfile > $file
+if [ $backup -ne 1 ]; then
+    rm $tmpfile
+fi

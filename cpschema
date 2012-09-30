@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# generalize this later ...
+
+if [ $# -ne 2 ]; then
+    prog=`basename $0`
+    echo "usage: $prog password table"
+    exit 1
+fi
+
+export PGPASSWORD=$1
+pg_dump --table=$2 --schema-only -U postgres warehouse_test > ~/warehouse_schemas/$2.sql
+psql -U postgres warehouse_unit < ~/warehouse_schemas/$2.sql
+export PGPASSWORD=''

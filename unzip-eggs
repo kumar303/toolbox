@@ -1,0 +1,76 @@
+#!/usr/bin/env python
+
+import shutil
+import tempfile
+import zipfile
+import os
+import glob
+import sys
+import optparse
+verbose = False
+
+def unzip_file_into_dir(file, dir):
+    """based on: http://lists.canonical.org/pipermail/kragen-hacks/2002-February/000322.html"""
+    zfobj = zipfile.ZipFile(file)
+    if verbose:
+        print "<--", file
+    for name in zfobj.namelist():
+        if name.endswith('/'):
+            if verbose:
+                print "  mkdir:", name
+            os.mkdir(os.path.join(dir, name))
+        else:
+            subdirs = name.split('/')
+            if len(subdirs) > 1:
+                path = ''
+                for d in subdirs[:-1]:
+                    path = os.path.join(path, d)
+                    fulld = os.path.join(dir, path)
+                    if not os.path.exists(fulld):
+                        if verbose:
+                            print "  mkdir:", path
+                        os.mkdir(fulld)
+            if verbose:
+                print "  create:", name
+            outfile = open(os.path.join(dir, name), 'wb')
+            outfile.write(zfobj.read(name))
+            outfile.close()
+            
+def main():
+    global verbose
+    p = optparse.OptionParser(usage='%prog [options] egg_dir')
+    p.add_option('--tmp-dir', help="defaults to /tmp", default='/tmp')
+    p.add_option('-v','--verbose', action='store_true', help="output more info")
+    p.add_option('-n','--dry-run', action='store_true', help="show what would happen")
+    (options, args) = p.parse_args()
+    verbose = options.verbose
+    if len(args) != 1:
+        p.error('incorrect args')
+    egg_dir = args[0]
+    print "searching %s ..." % egg_dir
+    for f in glob.glob('%s/*.egg' % egg_dir):
+        fname = f
+        if zipfile.is_zipfile(fname):
+            print "unzipping %s ..." % os.path.basename(fname)
+            tmpd = tempfile.mkdtemp(dir=options.tmp_dir)
+            if verbose:
+                print "tmp:", tmpd
+            try:
+                unzip_file_into_dir(fname, tmpd)
+                dest = fname
+                if options.dry_run:
+                    print "  WOULD unzip to:", dest
+                else:
+                    if verbose:
+                        print "swap %s -> %s" % (tmpd, dest)
+                    os.unlink(dest)
+                    shutil.move(tmpd, dest)
+                    print "  unzipped to:", dest
+            finally:
+                if os.path.exists(tmpd):
+                    shutil.rmtree(tmpd)
+        elif options.verbose:
+            print "not a zipfile: %s" % fname
+    
+if __name__ == '__main__':
+    main()

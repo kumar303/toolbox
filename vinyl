@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+import subprocess
+import optparse
+import shutil
+import os
+
+#### NOT WORKING
+
+def main():
+    """creates a new vinyl recording session and opens it"""
+    p = optparse.OptionParser(usage='%prog recording_name' + "\n\n" + main.__doc__)
+    (options, args) = p.parse_args()
+    if len(args) != 1:
+        p.error('incorrect args')
+    recording_name = args[0]
+    rec_dir = '/Users/kumar/Music/%s' % recording_name
+    shutil.copytree('/Users/kumar/Music/vinyl', rec_dir)
+    f = open(os.path.join(rec_dir, 'vinyl.logic/LgDoc/documentData'), 'rb')
+    buf = []
+    find = [b for b in ':vinyl:']
+    findlen = len(find)
+    replace = [b for b in (':%s:' % recording_name)]
+    while 1:
+        byte = f.read(1)
+        if not byte:
+            break
+        buf.append(byte)
+        buflen = len(buf)
+        start = buflen-findlen
+        end = buflen
+        try:
+            chunk = buf[start : end]
+        except IndexError:
+            # buf not long enough yet
+            continue
+        if chunk == find:
+            # print "matched"
+            # print buf[start : end]
+            for i in find:
+                buf.pop()
+            for b in replace:
+                buf.append(b)
+            # print buf[start : start + len(replace)]
+            
+    data = ''.join(buf)
+    f.close()
+    f = open(os.path.join(rec_dir, 'vinyl.logic/LgDoc/documentData'), 'wb')
+    f.write(data)
+    f.close()
+    subprocess.check_call('open %s' % os.path.join(rec_dir, 'vinyl.logic'), shell=True)
+
+if __name__ == '__main__':
+    main()
+

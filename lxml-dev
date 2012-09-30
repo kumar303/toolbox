@@ -1,0 +1,12 @@
+
+# you need to source this
+#
+# this is for lxml to work.  sigh.
+
+if [ ${#DYLD_FORCE_FLAT_NAMESPACE} -eq 0 ]; then
+	export DYLD_FORCE_FLAT_NAMESPACE=1
+	echo "set DYLD_FORCE_FLAT_NAMESPACE=1"
+else
+	unset DYLD_FORCE_FLAT_NAMESPACE
+	echo "unset DYLD_FORCE_FLAT_NAMESPACE"
+fi
